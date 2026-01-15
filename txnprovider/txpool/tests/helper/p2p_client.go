@@ -174,13 +174,17 @@ func (p *p2pClient) notifyWhenReady() (<-chan struct{}, error) {
 			if err != nil {
 				continue
 			}
-			defer r.Body.Close()
-
-			if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+			var iterationResp struct {
+				Result []struct {
+					Enode string `json:"enode"`
+				} `json:"result"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&iterationResp); err != nil {
+				r.Body.Close()
 				continue
 			}
-
-			if len(resp.Result) > numConn {
+			r.Body.Close()
+			if len(iterationResp.Result) > numConn {
 				ready <- struct{}{}
 				return
 			}
